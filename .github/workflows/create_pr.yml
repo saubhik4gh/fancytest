@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       sync_branch:
-        description: "Existing branch containing synced changes"
+        description: "Existing branch with synced changes (e.g. sync-1877)"
         required: true
         type: string
 
@@ -17,14 +17,21 @@ jobs:
       pull-requests: write
 
     steps:
-    - name: Create Pull Request
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        gh pr create \
-          --repo saubhik4gh/fancytest \
-          --head saubhik4gh:${{ inputs.sync_branch }} \
-          --base main \
-          --title "Sync cloud release logs" \
-          --body "🔄 Manual PR creation for already-synced changes"
+      - name: Validate branch exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Checking branch: ${{ inputs.sync_branch }}"
+          gh api repos/saubhik4gh/fancytest/branches/${{ inputs.sync_branch }} \
+            >/dev/null || { echo "❌ Branch does not exist"; exit 1; }
 
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --repo saubhik4gh/fancytest \
+            --head saubhik4gh:${{ inputs.sync_branch }} \
+            --base main \
+            --title "Sync cloud release logs" \
+            --body "🔄 Manual PR creation for already-synced changes"
