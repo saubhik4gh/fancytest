@@ -18,14 +18,12 @@ jobs:
 
     steps:
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ inputs.sync_branch }}
-          base: main
-          title: "Sync cloud release logs"
-          body: |
-            🔄 Manual PR creation
-
-            - Branch: `${{ inputs.sync_branch }}`
-            - Files already synced by another workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --repo saubhik4gh/fancytest \
+            --head "${{ inputs.sync_branch }}" \
+            --base main \
+            --title "Sync cloud release logs" \
+            --body "🔄 Manual PR creation for already-synced changes"
