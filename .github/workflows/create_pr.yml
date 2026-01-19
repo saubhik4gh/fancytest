@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: saubhik4gh/fancytest.git
-          token: ${{ secrets.DEST_REPO_TOKEN }}
+          token: ${{ secrets.SSH_KEY_DEST }}
           path: archive
           ref: main
 
