@@ -1,62 +1,31 @@
-name: Create PR
+name: Create PR for synced directory
+
 on:
-  push:
-    branches: main
   workflow_dispatch:
-  release:
-    types: [published]
+    inputs:
+      sync_branch:
+        description: "Existing branch containing synced changes"
+        required: true
+        type: string
 
 jobs:
-  sync-pr:
+  create-pr:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      pull-requests: write
+
     steps:
-      - name: Checkout source repo at release tag
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Extract release tag
-        run: echo "RELEASE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-
-      - name: Checkout destination repo
-        uses: actions/checkout@v4
-        with:
-          repository: saubhik4gh/fancytest.git
-          token: ${{ secrets.SSH_KEY_DEST }}
-          path: archive
-          ref: main
-
-      - name: Create sync branch
-        run: |
-          cd archive
-          git checkout -b sync-${RELEASE_TAG}
-
-      - name: Commit changes
-        run: |
-          cd archive
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-
-          git add .
-          git commit -m "Commit ${RELEASE_TAG}" || echo "No changes"
-
-      - name: Push branch
-        run: |
-          cd archive
-          git push origin sync-${RELEASE_TAG}
-
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.SSH_KEY_DEST }}
-          repository: saubhik4gh/fancytest
-          head: sync-${RELEASE_TAG}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ inputs.sync_branch }}
           base: main
-          title: "Sync dist from source release ${RELEASE_TAG}"
+          title: "Sync cloud release logs"
           body: |
-            Automated sync from source repo
+            🔄 Manual PR creation
 
-            - Source release: `${RELEASE_TAG}`
-            - Directory synced: `pytest/ → docs/archive`
-            - Triggered by GitHub Release
+            - Branch: `${{ inputs.sync_branch }}`
+            - Files already synced by another workflow
