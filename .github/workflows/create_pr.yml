@@ -17,13 +17,14 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Create Pull Request
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh pr create \
-            --repo saubhik4gh/fancytest \
-            --head "${{ inputs.sync_branch }}" \
-            --base main \
-            --title "Sync cloud release logs" \
-            --body "🔄 Manual PR creation for already-synced changes"
+    - name: Create Pull Request
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh pr create \
+          --repo saubhik4gh/fancytest \
+          --head saubhik4gh:${{ inputs.sync_branch }} \
+          --base main \
+          --title "Sync cloud release logs" \
+          --body "🔄 Manual PR creation for already-synced changes"
+
