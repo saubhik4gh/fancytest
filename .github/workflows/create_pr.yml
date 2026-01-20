@@ -1,12 +1,7 @@
-name: Create PR for synced directory
+name: Create PR for latest sync branch
 
 on:
   workflow_dispatch:
-    inputs:
-      sync_branch:
-        description: "Existing branch with synced changes (e.g. sync-1877)"
-        required: true
-        type: string
 
 jobs:
   create-pr:
@@ -17,13 +12,33 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Validate branch exists
+      - name: Find latest sync branch
+        id: find_branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Checking branch: ${{ inputs.sync_branch }}"
-          gh api repos/saubhik4gh/fancytest/branches/${{ inputs.sync_branch }} \
-            >/dev/null || { echo "❌ Branch does not exist"; exit 1; }
+          echo "Finding latest sync-* branch..."
+
+          BRANCH=$(gh api repos/saubhik4gh/fancytest/branches \
+            --jq '.[] | select(.name | startswith("sync-")) | .name' \
+            | sort -r \
+            | head -n 1)
+
+          if [ -z "$BRANCH" ]; then
+            echo "❌ No sync-* branch found"
+            exit 1
+          fi
+
+          echo "Using branch: $BRANCH"
+          echo "SYNC_BRANCH=$BRANCH" >> $GITHUB_ENV
+
+      - name: Ensure branch has commits vs main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api repos/saubhik4gh/fancytest/compare/main...${SYNC_BRANCH} \
+            --jq '.ahead_by' | grep -q '[1-9]' \
+            || { echo "❌ No commits between main and ${SYNC_BRANCH}"; exit 1; }
 
       - name: Create Pull Request
         env:
@@ -31,7 +46,7 @@ jobs:
         run: |
           gh pr create \
             --repo saubhik4gh/fancytest \
-            --head saubhik4gh:${{ inputs.sync_branch }} \
+            --head saubhik4gh:${SYNC_BRANCH} \
             --base main \
-            --title "Sync cloud release logs" \
-            --body "🔄 Manual PR creation for already-synced changes"
+            --title "Sync cloud release logs (${SYNC_BRANCH})" \
+            --body "🔄 Automated PR from latest sync branch"
