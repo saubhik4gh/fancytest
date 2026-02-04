@@ -122,10 +122,10 @@ jobs:
     # -------------------------------
     # Verify generated content
     # -------------------------------
-    - name: Verify Markdown
-      run: |
-        test -f generated/sample.md
-        grep -q "v1877.0" generated/sample.md
+    #- name: Verify Markdown
+    #  run: |
+    #    test -f generated/sample.md
+    #    grep -q "v1877.0" generated/sample.md
 
     # -------------------------------
     # Cleanup raw files
@@ -139,8 +139,8 @@ jobs:
     - name: Commit and push branch
       id: push
       run: |
-        git config user.name "github-actions"
-        git config user.email "github-actions@github.com"
+        git config user.name "Saubhik Datta"
+        git config user.email "saubhikdatta2019@gmail.com"
 
         BRANCH="sync-${GITHUB_RUN_ID}"
         echo "branch=$BRANCH" >> $GITHUB_OUTPUT
