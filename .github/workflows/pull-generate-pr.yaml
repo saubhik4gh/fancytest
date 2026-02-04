@@ -38,7 +38,7 @@ jobs:
     # -------------------------------
     - name: Clone source repo
       run: |
-        git clone --depth=1 git@github-source:saubhikdattagithub/mygardenimage.git /tmp/source-repo
+        git clone --depth=1 https://github.com/saubhikdattagithub/mygardenimage.git /tmp/source-repo
 
     # -------------------------------
     # Convert raw logs → Markdown
