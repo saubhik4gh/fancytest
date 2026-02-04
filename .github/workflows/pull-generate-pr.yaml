@@ -1,0 +1,112 @@
+name: Pull logs, convert to Markdown, create PR
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    # -------------------------------
+    # Checkout Account-2 repo
+    # -------------------------------
+    - name: Checkout destination repo
+      uses: actions/checkout@v4
+
+    # -------------------------------
+    # SSH for Account-1 (read-only)
+    # -------------------------------
+    - name: Setup SSH for source repo
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SOURCE_SSH_KEY }}" > ~/.ssh/id_source
+        chmod 600 ~/.ssh/id_source
+
+        cat <<EOF > ~/.ssh/config
+        Host github-source
+          HostName github.com
+          User git
+          IdentityFile ~/.ssh/id_source
+          IdentitiesOnly yes
+        EOF
+
+        ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+    # -------------------------------
+    # Clone source repo TEMPORARILY
+    # -------------------------------
+    - name: Clone source repo
+      run: |
+        git clone --depth=1 git@github-source:saubhikdattagithub/mygardenimage.git /tmp/source-repo
+
+    # -------------------------------
+    # Convert raw logs → Markdown
+    # -------------------------------
+    - name: Generate Markdown
+      run: |
+        mkdir -p generated
+
+        python3 scripts/log_to_md.py \
+          /tmp/source-repo/sample.log \
+          generated/sample.md \
+          Azure
+
+    # -------------------------------
+    # Verify generated content
+    # -------------------------------
+    - name: Verify Markdown
+      run: |
+        test -f generated/sample.md
+        grep -q "v1877.0" generated/sample.md
+
+    # -------------------------------
+    # Cleanup raw files
+    # -------------------------------
+    - name: Cleanup source files
+      run: rm -rf /tmp/source-repo
+
+    # -------------------------------
+    # Commit & push branch
+    # -------------------------------
+    - name: Commit and push branch
+      id: push
+      run: |
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
+
+        BRANCH="sync-${GITHUB_RUN_ID}"
+        echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+
+        git checkout -b "$BRANCH"
+        git add generated/
+        git commit -m "Generate Markdown from source logs"
+        git push origin "$BRANCH"
+
+    # -------------------------------
+    # Create PR in Account-2
+    # -------------------------------
+    - name: Create Pull Request
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.DEST_REPO_TOKEN }}
+        script: |
+          const branch = '${{ steps.push.outputs.branch }}'
+
+          const pr = await github.rest.pulls.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: 'Sync logs from source repository',
+            head: branch,
+            base: 'main',
+            body: `
+            This PR was automatically generated.
+
+            ✔ Pulled raw logs from Account-1
+            ✔ Converted to Markdown in Account-2
+            ✔ Raw files not committed
+            ✔ Verification passed
+            `
+          })
+
+          core.info(`PR created: ${pr.data.html_url}`)
