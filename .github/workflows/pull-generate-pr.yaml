@@ -150,7 +150,6 @@ jobs:
         echo "branch=$BRANCH" >> $GITHUB_OUTPUT
 
         git checkout -b "$BRANCH"
-        git add generated/
         git commit -m "Generate Markdown from source logs"
         git push origin "$BRANCH"
 
