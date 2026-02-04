@@ -7,6 +7,10 @@ jobs:
   sync:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      pull-requests: write
+
     steps:
     # -------------------------------
     # Checkout Account-2 repo
@@ -52,7 +56,7 @@ jobs:
     
         python3 scripts/log_to_md.py \
           "$AZURE_LOG_AMD" \
-          /tmp/1877.0.azure-amd64.md \
+          archive/1877/1877.0.azure-amd64.md \
           Azure
 
     - name: Generate Azure markdown for ARM
@@ -64,7 +68,7 @@ jobs:
     
         python3 scripts/log_to_md.py \
           "$AZURE_LOG_ARM" \
-          /tmp/1877.0.azure-arm64.md \
+          archive/1877/1877.0.azure-arm64.md \
           Azure
 
     - name: Generate AWS markdown for AMD
@@ -76,7 +80,7 @@ jobs:
     
         python3 scripts/log_to_md.py \
           "$AWS_LOG_AMD" \
-          /tmp/1877.0.aws-amd64.md \
+          archive/1877/1877.0.aws-amd64.md \
           AWS
 
     - name: Generate AWS markdown for ARM
@@ -88,7 +92,7 @@ jobs:
     
         python3 scripts/log_to_md.py \
           "$AWS_LOG_ARM" \
-          /tmp/1877.0.aws-arm64.md \
+          archive/1877/1877.0.aws-arm64.md \
           AWS
 
     - name: Generate GCP markdown for AMD
@@ -100,7 +104,7 @@ jobs:
     
         python3 scripts/log_to_md.py \
           "$GCP_LOG_AMD" \
-          /tmp/1877.0.gcp-amd64.md \
+          archive/1877/1877.0.gcp-amd64.md \
           GCP
 
     - name: Generate GCP markdown for ARM
@@ -112,7 +116,7 @@ jobs:
     
         python3 scripts/log_to_md.py \
           "$GCP_LOG_ARM" \
-          /tmp/1877.0.gcp-arm64.md \
+          archive/1877/1877.0.gcp-arm64.md \
           GCP
 
 
@@ -154,26 +158,13 @@ jobs:
     # Create PR in Account-2
     # -------------------------------
     - name: Create Pull Request
-      uses: actions/github-script@v7
-      with:
-        github-token: ${{ secrets.DEST_REPO_TOKEN }}
-        script: |
-          const branch = '${{ steps.push.outputs.branch }}'
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh pr create \
+          --repo saubhik4gh/fancytest \
+          --head saubhik4gh:${BRANCH} \
+          --base main \
+          --title "Sync cloud release logs (${BRANCH})" \
+          --body "🔄 Automated PR"
 
-          const pr = await github.rest.pulls.create({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            title: 'Sync logs from source repository',
-            head: branch,
-            base: 'main',
-            body: `
-            This PR was automatically generated.
-
-            ✔ Pulled raw logs from Account-1
-            ✔ Converted to Markdown in Account-2
-            ✔ Raw files not committed
-            ✔ Verification passed
-            `
-          })
-
-          core.info(`PR created: ${pr.data.html_url}`)
