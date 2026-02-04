@@ -145,13 +145,25 @@ jobs:
       run: |
         git config user.name "Saubhik Datta"
         git config user.email "saubhikdatta2019@gmail.com"
-
+    
         BRANCH="sync-${GITHUB_RUN_ID}"
         echo "branch=$BRANCH" >> $GITHUB_OUTPUT
-
+    
         git checkout -b "$BRANCH"
+    
+        echo "📂 Contents of generated/:"
+        ls -l generated/ || true
+    
+        git add generated/
+    
+        if git diff --cached --quiet; then
+          echo "ℹ️ No changes to commit"
+          exit 0
+        fi
+    
         git commit -m "Generate Markdown from source logs"
         git push origin "$BRANCH"
+
 
     # -------------------------------
     # Create PR in Account-2
