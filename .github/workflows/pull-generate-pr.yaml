@@ -43,14 +43,81 @@ jobs:
     # -------------------------------
     # Convert raw logs → Markdown
     # -------------------------------
-    - name: Generate Markdown
+    - name: Generate Azure markdown for AMD
       run: |
-        mkdir -p generated
-
+        AZURE_LOG_AMD=$(find /tmp/source-repo/pytest/test-data-gl \
+          -type f -iname "azure-gardener_prod-amd64*platform.test.log" | head -n 1)
+    
+        [ -n "$AZURE_LOG_AMD" ] || { echo "Azure log AMD not found"; exit 1; }
+    
         python3 scripts/log_to_md.py \
-          /tmp/source-repo/sample.log \
-          generated/sample.md \
+          "$AZURE_LOG_AMD" \
+          /tmp/1877.0.azure-amd64.md \
           Azure
+
+    - name: Generate Azure markdown for ARM
+      run: |
+        AZURE_LOG_ARM=$(find /tmp/source-repo/pytest/test-data-gl \
+          -type f -iname "azure-gardener_prod-arm64*platform.test.log" | head -n 1)
+    
+        [ -n "$AZURE_LOG_ARM" ] || { echo "Azure log ARM not found"; exit 1; }
+    
+        python3 scripts/log_to_md.py \
+          "$AZURE_LOG_ARM" \
+          /tmp/1877.0.azure-arm64.md \
+          Azure
+
+    - name: Generate AWS markdown for AMD
+      run: |
+        AWS_LOG_AMD=$(find /tmp/source-repo/pytest/test-data-gl \
+          -type f -iname "aws-gardener_prod-amd64*platform.test.log" | head -n 1)
+    
+        [ -n "$AWS_LOG_AMD" ] || { echo "AWS log AMD not found"; exit 1; }
+    
+        python3 scripts/log_to_md.py \
+          "$AWS_LOG_AMD" \
+          /tmp/1877.0.aws-amd64.md \
+          AWS
+
+    - name: Generate AWS markdown for ARM
+      run: |
+        AWS_LOG_ARM=$(find /tmp/source-repo/pytest/test-data-gl \
+          -type f -iname "aws-gardener_prod-arm64*platform.test.log" | head -n 1)
+    
+        [ -n "$AWS_LOG_ARM" ] || { echo "AWS log ARM not found"; exit 1; }
+    
+        python3 scripts/log_to_md.py \
+          "$AWS_LOG_ARM" \
+          /tmp/1877.0.aws-arm64.md \
+          AWS
+
+    - name: Generate GCP markdown for AMD
+      run: |
+        GCP_LOG_AMD=$(find /tmp/source-repo/pytest/test-data-gl \
+          -type f -iname "gcp-gardener_prod-amd64*platform.test.log" | head -n 1)
+    
+        [ -n "$GCP_LOG_AMD" ] || { echo "GCP log AMD not found"; exit 1; }
+    
+        python3 scripts/log_to_md.py \
+          "$GCP_LOG_AMD" \
+          /tmp/1877.0.gcp-amd64.md \
+          GCP
+
+    - name: Generate GCP markdown for ARM
+      run: |
+        GCP_LOG_ARM=$(find /tmp/source-repo/pytest/test-data-gl \
+          -type f -iname "gcp-gardener_prod-arm64*platform.test.log" | head -n 1)
+    
+        [ -n "$GCP_LOG_ARM" ] || { echo "GCP log ARM not found"; exit 1; }
+    
+        python3 scripts/log_to_md.py \
+          "$GCP_LOG_ARM" \
+          /tmp/1877.0.gcp-arm64.md \
+          GCP
+
+
+
+
 
     # -------------------------------
     # Verify generated content
