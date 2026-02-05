@@ -129,13 +129,13 @@ jobs:
 
         git checkout -b "$BRANCH"
 
-        echo "📂 Archive contents:"
-        ls -l archive/1877
+        git status
+        git diff --stat archive/1877 || true
 
         git add archive/1877/*.md || true
 
         if git diff --cached --quiet; then
-          echo "ℹ️ No changes to commit"
+          echo "No changes to commit"
           exit 0
         fi
 
